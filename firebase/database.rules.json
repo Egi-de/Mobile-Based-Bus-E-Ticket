@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "buses": {
+      ".read": true,
+      "$busId": {
+        ".write": true
+      }
+    }
+  }
+}

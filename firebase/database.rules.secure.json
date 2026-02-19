@@ -1,0 +1,16 @@
+{
+  "rules": {
+    "buses": {
+      ".read": "auth != null",
+      "$busId": {
+        ".write": "auth != null && (auth.token.role == 'DRIVER' || auth.token.role == 'ADMIN')"
+      }
+    },
+    "users": {
+      "$userId": {
+        ".read": "auth != null && auth.uid == $userId",
+        ".write": "auth != null && auth.uid == $userId"
+      }
+    }
+  }
+}

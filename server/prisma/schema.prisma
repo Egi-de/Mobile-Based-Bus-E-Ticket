@@ -1,0 +1,281 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String                   @id @default(uuid())
+  email                   String                   @unique
+  name                    String
+  phone                   String
+  password                String
+  role                    UserRole                 @default(PASSENGER)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  bookings                Booking[]
+  passes                  Pass[]
+  fcmTokens               FcmToken[]
+  notificationPreference  NotificationPreference?
+  buses                   Bus[]                    @relation("BusDriver")
+  trips                   Trip[]                   //  NEW: Driver's trips
+  profilePicture          String?
+
+  @@map("users")
+}
+
+model Route {
+  id             String    @id @default(uuid())
+  origin         String
+  destination    String
+  departureTime  DateTime
+  arrivalTime    DateTime
+  price          Float
+  operator       String
+  seatsAvailable Int
+  totalSeats     Int
+  amenities      String[]
+  imageUrl       String?   // Optional bus/coach image for route card
+  plateNumber    String?   // Bus plate number for passenger identification
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  bookings       Booking[]
+  buses          Bus[]
+  trips          Trip[]    //  NEW: Routes can have multiple trips
+  stops          Stop[]    //  NEW: Routes have intermediate stops
+
+  @@map("routes")
+}
+
+//  NEW: Trip model for trip-centric system
+model Trip {
+  id              String     @id @default(uuid())
+  busId           String
+  routeId         String
+  driverId        String?
+  departureTime   DateTime
+  arrivalTime     DateTime
+  tripStatus      TripStatus @default(WAITING)
+  trackingEnabled Boolean    @default(false)
+  currentStopId   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  
+  // Relations
+  bus             Bus        @relation(fields: [busId], references: [id])
+  route           Route      @relation(fields: [routeId], references: [id])
+  driver          User?      @relation(fields: [driverId], references: [id])
+  currentStop     Stop?      @relation("CurrentStop", fields: [currentStopId], references: [id])
+  tickets         Ticket[]   //  Tickets belong to trips
+
+  @@index([routeId, departureTime])
+  @@index([busId])
+  @@map("trips")
+}
+
+//  NEW: Stop model for intermediate stops
+model Stop {
+  id                      String   @id @default(uuid())
+  routeId                 String
+  stopName                String
+  latitude                Float
+  longitude               Float
+  orderNumber             Int      // Sequential order: 1, 2, 3, 4...
+  detectionRadius         Float    @default(100) // GPS detection radius in meters
+  estimatedArrivalMinutes Int?     // Estimated minutes from origin
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  // Relations
+  route                   Route    @relation(fields: [routeId], references: [id])
+  boardingTickets         Ticket[] @relation("BoardingStop")
+  dropTickets             Ticket[] @relation("DropStop")
+  currentTrips            Trip[]   @relation("CurrentStop")
+
+  @@index([routeId, orderNumber])
+  @@map("stops")
+}
+
+//  UPDATED: Ticket model for trip-centric system
+model Ticket {
+  id             String       @id @default(uuid())
+  bookingId      String
+  tripId         String       //  Links to specific trip
+  boardingStopId String       //  Where passenger boards
+  dropStopId     String       //  Where passenger drops
+  seatNumber     String       //  Seat assignment
+  status         TicketStatus @default(ACTIVE)
+  qrCode         String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  // Relations
+  trip           Trip         @relation(fields: [tripId], references: [id])
+  boardingStop   Stop         @relation("BoardingStop", fields: [boardingStopId], references: [id])
+  dropStop       Stop         @relation("DropStop", fields: [dropStopId], references: [id])
+
+  @@index([tripId, status])
+  @@index([boardingStopId])
+  @@index([dropStopId])
+  @@map("tickets")
+}
+
+model Booking {
+  id                String             @id @default(uuid())
+  userId            String
+  routeId           String
+  seats             String[]
+  totalAmount       Float
+  status            BookingStatus      @default(ACTIVE)
+  qrCode            String?
+  bookingDate       DateTime           @default(now())
+  travelDate        DateTime
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  route             Route              @relation(fields: [routeId], references: [id])
+  user              User               @relation(fields: [userId], references: [id])
+  notificationLogs  NotificationLog[]
+
+  @@map("bookings")
+}
+
+model PassTemplate {
+  id           String   @id @default(uuid())
+  type         PassType
+  name         String
+  description  String
+  price        Float
+  durationDays Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("pass_templates")
+}
+
+model Pass {
+  id           String     @id @default(uuid())
+  userId       String
+  templateId   String?
+  type         PassType
+  name         String
+  price        Float
+  status       PassStatus @default(ACTIVE)
+  qrCode       String?
+  purchaseDate DateTime   @default(now())
+  expiryDate   DateTime
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@map("passes")
+}
+
+model Bus {
+  id          String    @id @default(uuid())
+  plateNumber String    @unique
+  routeId     String?
+  driverId    String?
+  currentLat  Float?
+  currentLng  Float?
+  speed       Float?
+  heading     Float?
+  status      BusStatus @default(IDLE)
+  totalSeats  Int       @default(40) //  NEW: Total seats for availability calculation
+  imageUrl    String?   // Optional bus image (Cloudinary / Unsplash URL)
+  lastUpdated DateTime  @updatedAt
+  route       Route?    @relation(fields: [routeId], references: [id])
+  driver      User?     @relation("BusDriver", fields: [driverId], references: [id])
+  trips       Trip[]    //  NEW: Bus can have multiple trips
+
+  @@map("buses")
+}
+
+model FcmToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  String   // 'android' | 'ios' | 'web'
+  deviceId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fcm_tokens")
+}
+
+model NotificationPreference {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  arrivalAlerts         Boolean  @default(true)
+  arrivalMinutesBefore  Int      @default(10)
+  delayAlerts           Boolean  @default(true)
+  statusChangeAlerts    Boolean  @default(true)
+  soundEnabled          Boolean  @default(true)
+  vibrationEnabled      Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model NotificationLog {
+  id        String   @id @default(uuid())
+  bookingId String
+  type      String   // 'DEPARTURE', 'ARRIVAL', 'DELAY'
+  sentAt    DateTime @default(now())
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, type])
+  @@map("notification_logs")
+}
+
+enum BookingStatus {
+  ACTIVE
+  USED
+  CANCELLED
+}
+
+enum PassType {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum PassStatus {
+  ACTIVE
+  EXPIRED
+}
+
+enum BusStatus {
+  IDLE
+  ON_ROUTE
+  DELAYED
+  MAINTENANCE
+}
+
+enum UserRole {
+  DRIVER
+  PASSENGER
+  ADMIN
+}
+
+//  NEW: Trip status enum
+enum TripStatus {
+  WAITING
+  BOARDING
+  ON_ROUTE
+  COMPLETED
+  CANCELLED
+}
+
+//  NEW: Ticket status enum
+enum TicketStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
