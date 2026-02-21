@@ -14,6 +14,8 @@ import {
   Animated,
   Image,
   RefreshControl,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
@@ -111,197 +113,208 @@ export default function HomeScreen() {
   return (
     <GradientBackground>
       <ScreenWrapper style={{ backgroundColor: "transparent" }}>
-        <RefreshableScrollView
-          contentContainerStyle={styles.scrollContent}
-          onRefresh={onRefresh}
-          refreshControl={
-            <RefreshControl
-              refreshing={false}
-              onRefresh={onRefresh}
-              tintColor={theme.colors.accent.main} // Lime spinner
-            />
-          }
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
         >
-          {/* 1. Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => router.push("/(tabs)/profile")}
-              style={styles.profileButton}
-            >
-              <View style={styles.avatarContainer}>
-                {user?.profilePicture ? (
-                  <Image
-                    source={{ uri: user.profilePicture }}
-                    style={styles.avatarImage}
-                    // cache policy handled via uri timestamp query param
-                  />
-                ) : (
-                  <View
-                    style={[
-                      styles.avatarImage,
-                      {
-                        backgroundColor: theme.colors.primary[500],
-                        alignItems: "center",
-                        justifyContent: "center",
-                      },
-                    ]}
-                  >
-                    <Text style={styles.avatarInitials}>
-                      {user?.name
-                        ? user.name.substring(0, 1).toUpperCase()
-                        : "G"}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <View>
-                <Text style={styles.greetingText}>{greeting},</Text>
-                <Text style={styles.userNameText}>
-                  {user?.name?.split(" ")[0] || "Guest"} 👋
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons
-                name="notifications-outline"
-                size={24}
-                color={theme.colors.text.primary}
+          <RefreshableScrollView
+            contentContainerStyle={styles.scrollContent}
+            onRefresh={onRefresh}
+            refreshControl={
+              <RefreshControl
+                refreshing={false}
+                onRefresh={onRefresh}
+                tintColor={theme.colors.accent.main} // Lime spinner
               />
-              <Animated.View
-                style={[
-                  styles.notificationBadge,
-                  { transform: [{ scale: pulseAnim }] },
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* 2. Active Ticket (HERO) */}
-          <FadeInView delay={100} duration={600}>
-            {activeTicket ? (
-              <View style={styles.heroSection}>
-                <ActiveTicketCard
-                  booking={activeTicket}
-                  onPress={() => router.push("/(tabs)/tickets")}
-                />
-              </View>
-            ) : (
-              // Search section for finding buses
-              <View
-                style={[styles.heroSection, { marginBottom: theme.spacing.lg }]}
+            }
+          >
+            {/* 1. Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => router.push("/(tabs)/profile")}
+                style={styles.profileButton}
               >
-                <Card variant="default" padding="md" style={styles.searchCard}>
-                  <Text style={styles.searchTitle}>Where to today?</Text>
-                  <Input
-                    label=""
-                    placeholder="Search destination (e.g. Rubavu, Musanze)"
-                    value={searchDestination}
-                    onChangeText={setSearchDestination}
-                    onSubmitEditing={handleSearch}
-                    returnKeyType="search"
-                    leftIcon="search"
-                    style={styles.searchInput}
-                  />
-                  {searchDestination.trim().length > 0 && (
-                    <TouchableOpacity
-                      style={styles.searchButton}
-                      onPress={handleSearch}
-                      activeOpacity={0.85}
+                <View style={styles.avatarContainer}>
+                  {user?.profilePicture ? (
+                    <Image
+                      source={{ uri: user.profilePicture }}
+                      style={styles.avatarImage}
+                      // cache policy handled via uri timestamp query param
+                    />
+                  ) : (
+                    <View
+                      style={[
+                        styles.avatarImage,
+                        {
+                          backgroundColor: theme.colors.primary[500],
+                          alignItems: "center",
+                          justifyContent: "center",
+                        },
+                      ]}
                     >
-                      <Ionicons
-                        name="arrow-forward-circle"
-                        size={20}
-                        color="#000"
-                      />
-                      <Text style={styles.searchButtonText}>
-                        Search Buses to "{searchDestination.trim()}"
+                      <Text style={styles.avatarInitials}>
+                        {user?.name
+                          ? user.name.substring(0, 1).toUpperCase()
+                          : "G"}
                       </Text>
-                    </TouchableOpacity>
+                    </View>
                   )}
-                </Card>
-              </View>
-            )}
-          </FadeInView>
-
-          {/* 3. Quick Actions (Adaptive) */}
-          <FadeInView delay={200} duration={600}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Quick Actions</Text>
-              <View style={styles.quickActionsGrid}>
-                {/* ID: 1 - Show QR (if active ticket) OR Buy Pass */}
-                {activeTicket ? (
-                  <View style={styles.gridItem}>
-                    <QuickActionCard
-                      icon="qr-code-outline"
-                      title="Show QR"
-                      primary // Highlighted
-                      onPress={() => router.push("/(tabs)/tickets")}
-                    />
-                  </View>
-                ) : (
-                  <View style={styles.gridItem}>
-                    <QuickActionCard
-                      icon="card-outline"
-                      title="Buy Pass"
-                      onPress={() => router.push("/(tabs)/passes")}
-                    />
-                  </View>
-                )}
-
-                {/* ID: 2 - Track Bus (Always relevant) */}
-                <View style={styles.gridItem}>
-                  <QuickActionCard
-                    icon="map-outline"
-                    title="Track Bus"
-                    onPress={() => {
-                      if (activeTicket?.id) {
-                        // ✅ Fix Issue 9: Pass bookingId (activeTicket is a Booking, not a Ticket)
-                        router.push({
-                          pathname: "/(screens)/bus-tracking",
-                          params: {
-                            bookingId: activeTicket.id,
-                            origin: activeTicket.route?.origin,
-                            destination: activeTicket.route?.destination,
-                            operator: activeTicket.route?.operator,
-                          },
-                        });
-                      } else {
-                        useToastStore
-                          .getState()
-                          .info(
-                            "Book a ticket first to track.",
-                            "No Active Trip",
-                          );
-                      }
-                    }}
-                  />
                 </View>
-
-                {/* ID: 3 - Book Ticket */}
-                <View style={styles.gridItem}>
-                  <QuickActionCard
-                    icon="ticket-outline"
-                    title="Book Ticket"
-                    onPress={() => router.push("/(tabs)/routes")}
-                  />
+                <View>
+                  <Text style={styles.greetingText}>{greeting},</Text>
+                  <Text style={styles.userNameText}>
+                    {user?.name?.split(" ")[0] || "Guest"} 👋
+                  </Text>
                 </View>
+              </TouchableOpacity>
 
-                {/* ID: 4 - My Trips */}
-                <View style={styles.gridItem}>
-                  <QuickActionCard
-                    icon="time-outline"
-                    title="My Trips"
+              <TouchableOpacity style={styles.notificationButton}>
+                <Ionicons
+                  name="notifications-outline"
+                  size={24}
+                  color={theme.colors.text.primary}
+                />
+                <Animated.View
+                  style={[
+                    styles.notificationBadge,
+                    { transform: [{ scale: pulseAnim }] },
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* 2. Active Ticket (HERO) */}
+            <FadeInView delay={100} duration={600}>
+              {activeTicket ? (
+                <View style={styles.heroSection}>
+                  <ActiveTicketCard
+                    booking={activeTicket}
                     onPress={() => router.push("/(tabs)/tickets")}
                   />
                 </View>
-              </View>
-            </View>
-          </FadeInView>
+              ) : (
+                // Search section for finding buses
+                <View
+                  style={[
+                    styles.heroSection,
+                    { marginBottom: theme.spacing.lg },
+                  ]}
+                >
+                  <Card
+                    variant="default"
+                    padding="md"
+                    style={styles.searchCard}
+                  >
+                    <Text style={styles.searchTitle}>Where to today?</Text>
+                    <Input
+                      label=""
+                      placeholder="Search destination (e.g. Rubavu, Musanze)"
+                      value={searchDestination}
+                      onChangeText={setSearchDestination}
+                      onSubmitEditing={handleSearch}
+                      returnKeyType="search"
+                      leftIcon="search"
+                      style={styles.searchInput}
+                    />
+                    {searchDestination.trim().length > 0 && (
+                      <TouchableOpacity
+                        style={styles.searchButton}
+                        onPress={handleSearch}
+                        activeOpacity={0.85}
+                      >
+                        <Ionicons
+                          name="arrow-forward-circle"
+                          size={20}
+                          color="#000"
+                        />
+                        <Text style={styles.searchButtonText}>
+                          Search Buses to "{searchDestination.trim()}"
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </Card>
+                </View>
+              )}
+            </FadeInView>
 
-          {/* 4. Recent Routes (Hidden for single-screen premium feel) */}
-          {/* 
+            {/* 3. Quick Actions (Adaptive) */}
+            <FadeInView delay={200} duration={600}>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Quick Actions</Text>
+                <View style={styles.quickActionsGrid}>
+                  {/* ID: 1 - Show QR (if active ticket) OR Buy Pass */}
+                  {activeTicket ? (
+                    <View style={styles.gridItem}>
+                      <QuickActionCard
+                        icon="qr-code-outline"
+                        title="Show QR"
+                        primary // Highlighted
+                        onPress={() => router.push("/(tabs)/tickets")}
+                      />
+                    </View>
+                  ) : (
+                    <View style={styles.gridItem}>
+                      <QuickActionCard
+                        icon="card-outline"
+                        title="Buy Pass"
+                        onPress={() => router.push("/(tabs)/passes")}
+                      />
+                    </View>
+                  )}
+
+                  {/* ID: 2 - Track Bus (Always relevant) */}
+                  <View style={styles.gridItem}>
+                    <QuickActionCard
+                      icon="map-outline"
+                      title="Track Bus"
+                      onPress={() => {
+                        if (activeTicket?.id) {
+                          // ✅ Fix Issue 9: Pass bookingId (activeTicket is a Booking, not a Ticket)
+                          router.push({
+                            pathname: "/(screens)/bus-tracking",
+                            params: {
+                              bookingId: activeTicket.id,
+                              origin: activeTicket.route?.origin,
+                              destination: activeTicket.route?.destination,
+                              operator: activeTicket.route?.operator,
+                            },
+                          });
+                        } else {
+                          useToastStore
+                            .getState()
+                            .info(
+                              "Book a ticket first to track.",
+                              "No Active Trip",
+                            );
+                        }
+                      }}
+                    />
+                  </View>
+
+                  {/* ID: 3 - Book Ticket */}
+                  <View style={styles.gridItem}>
+                    <QuickActionCard
+                      icon="ticket-outline"
+                      title="Book Ticket"
+                      onPress={() => router.push("/(tabs)/routes")}
+                    />
+                  </View>
+
+                  {/* ID: 4 - My Trips */}
+                  <View style={styles.gridItem}>
+                    <QuickActionCard
+                      icon="time-outline"
+                      title="My Trips"
+                      onPress={() => router.push("/(tabs)/tickets")}
+                    />
+                  </View>
+                </View>
+              </View>
+            </FadeInView>
+
+            {/* 4. Recent Routes (Hidden for single-screen premium feel) */}
+            {/*
           <FadeInView delay={300}>
             <View style={styles.section}>
                <View style={styles.sectionHeader}>
@@ -310,7 +323,7 @@ export default function HomeScreen() {
                          <Text style={styles.seeAllText}>See All</Text>
                     </TouchableOpacity>
                </View>
-               
+
                <TouchableOpacity style={styles.recentRouteItem}>
                    <View style={styles.recentRouteIcon}>
                         <Ionicons name="location-outline" size={20} color={theme.colors.accent.main} />
@@ -336,7 +349,8 @@ export default function HomeScreen() {
             </View>
           </FadeInView>
           */}
-        </RefreshableScrollView>
+          </RefreshableScrollView>
+        </KeyboardAvoidingView>
       </ScreenWrapper>
     </GradientBackground>
   );
@@ -344,6 +358,9 @@ export default function HomeScreen() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
+    keyboardView: {
+      flex: 1,
+    },
     scrollContent: {
       paddingHorizontal: theme.spacing.base,
       paddingBottom: 120, // Bottom nav spacing

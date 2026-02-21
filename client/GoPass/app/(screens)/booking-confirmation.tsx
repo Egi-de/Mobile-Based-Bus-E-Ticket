@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -116,117 +118,125 @@ export default function BookingConfirmationScreen() {
         <Text style={styles.headerTitle}>Confirm Booking</Text>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
       >
-        <Card style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Trip Details</Text>
-          <View style={styles.row}>
-            <View>
-              <Text style={styles.label}>Route</Text>
-              <Text style={styles.value}>
-                {origin} to {destination}
-              </Text>
-            </View>
-            <View style={{ alignItems: "flex-end" }}>
-              <Text style={styles.label}>Operator</Text>
-              <Text style={styles.value}>{operator}</Text>
-            </View>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <View>
-              <Text style={styles.label}>Date & Time</Text>
-              <Text style={styles.value}>
-                {date}, {time}
-              </Text>
-            </View>
-            <View style={{ alignItems: "flex-end" }}>
-              <Text style={styles.label}>Seats ({seatList.length})</Text>
-              <Text style={styles.value}>{seatList.join(", ")}</Text>
-            </View>
-          </View>
-          {/* ✅ Issue 4: Plate number */}
-          {!!plateNumber && (
-            <>
-              <View style={styles.divider} />
-              <View style={styles.row}>
-                <View>
-                  <Text style={styles.label}>Bus Plate Number</Text>
-                  <Text
-                    style={[styles.value, { color: theme.colors.accent.main }]}
-                  >
-                    {plateNumber}
-                  </Text>
-                </View>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <Card style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Trip Details</Text>
+            <View style={styles.row}>
+              <View>
+                <Text style={styles.label}>Route</Text>
+                <Text style={styles.value}>
+                  {origin} to {destination}
+                </Text>
               </View>
-            </>
-          )}
-        </Card>
+              <View style={{ alignItems: "flex-end" }}>
+                <Text style={styles.label}>Operator</Text>
+                <Text style={styles.value}>{operator}</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.row}>
+              <View>
+                <Text style={styles.label}>Date & Time</Text>
+                <Text style={styles.value}>
+                  {date}, {time}
+                </Text>
+              </View>
+              <View style={{ alignItems: "flex-end" }}>
+                <Text style={styles.label}>Seats ({seatList.length})</Text>
+                <Text style={styles.value}>{seatList.join(", ")}</Text>
+              </View>
+            </View>
+            {/* ✅ Issue 4: Plate number */}
+            {!!plateNumber && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.row}>
+                  <View>
+                    <Text style={styles.label}>Bus Plate Number</Text>
+                    <Text
+                      style={[
+                        styles.value,
+                        { color: theme.colors.accent.main },
+                      ]}
+                    >
+                      {plateNumber}
+                    </Text>
+                  </View>
+                </View>
+              </>
+            )}
+          </Card>
 
-        <Text style={styles.sectionHeader}>Payment Method</Text>
-        <View style={styles.methodsContainer}>
-          {MOCK_PAYMENT_METHODS.map((method) => {
-            const isSelected = selectedMethodId === method.id;
-            return (
-              <TouchableOpacity
-                key={method.id}
-                style={[
-                  styles.methodCard,
-                  isSelected && styles.methodCardSelected,
-                ]}
-                onPress={() => setSelectedMethodId(method.id)}
-              >
-                <View
-                  style={[styles.radio, isSelected && styles.radioSelected]}
+          <Text style={styles.sectionHeader}>Payment Method</Text>
+          <View style={styles.methodsContainer}>
+            {MOCK_PAYMENT_METHODS.map((method) => {
+              const isSelected = selectedMethodId === method.id;
+              return (
+                <TouchableOpacity
+                  key={method.id}
+                  style={[
+                    styles.methodCard,
+                    isSelected && styles.methodCardSelected,
+                  ]}
+                  onPress={() => setSelectedMethodId(method.id)}
                 >
-                  {isSelected && <View style={styles.radioInner} />}
-                </View>
-                <View style={styles.methodInfo}>
-                  <Text
-                    style={[
-                      styles.methodLabel,
-                      isSelected && styles.methodLabelSelected,
-                    ]}
+                  <View
+                    style={[styles.radio, isSelected && styles.radioSelected]}
                   >
-                    {method.label}
-                  </Text>
-                  <Text style={styles.methodSubtext}>
-                    {method.type === "mobile_money"
-                      ? "Fast & Secure"
-                      : "Credit/Debit Card"}
-                  </Text>
-                </View>
-                <Ionicons
-                  name={
-                    method.type === "mobile_money"
-                      ? "phone-portrait-outline"
-                      : "card-outline"
-                  }
-                  size={24}
-                  color={
-                    isSelected
-                      ? theme.colors.primary[500]
-                      : theme.colors.text.tertiary
-                  }
-                />
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                    {isSelected && <View style={styles.radioInner} />}
+                  </View>
+                  <View style={styles.methodInfo}>
+                    <Text
+                      style={[
+                        styles.methodLabel,
+                        isSelected && styles.methodLabelSelected,
+                      ]}
+                    >
+                      {method.label}
+                    </Text>
+                    <Text style={styles.methodSubtext}>
+                      {method.type === "mobile_money"
+                        ? "Fast & Secure"
+                        : "Credit/Debit Card"}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={
+                      method.type === "mobile_money"
+                        ? "phone-portrait-outline"
+                        : "card-outline"
+                    }
+                    size={24}
+                    color={
+                      isSelected
+                        ? theme.colors.primary[500]
+                        : theme.colors.text.tertiary
+                    }
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-        <Card style={styles.paymentInputCard}>
-          <Input
-            label="Phone Number"
-            placeholder="078 XXX XXXX"
-            keyboardType="phone-pad"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            leftIcon="call-outline"
-          />
-        </Card>
-      </ScrollView>
+          <Card style={styles.paymentInputCard}>
+            <Input
+              label="Phone Number"
+              placeholder="078 XXX XXXX"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              leftIcon="call-outline"
+            />
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View style={styles.footer}>
         <View style={styles.totalRow}>
@@ -247,6 +257,9 @@ export default function BookingConfirmationScreen() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
+    keyboardView: {
+      flex: 1,
+    },
     header: {
       flexDirection: "row",
       alignItems: "center",

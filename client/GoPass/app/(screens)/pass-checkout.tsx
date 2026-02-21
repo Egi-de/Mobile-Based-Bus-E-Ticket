@@ -5,6 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -83,96 +85,103 @@ export default function PassCheckoutScreen() {
         <Text style={styles.headerTitle}>Buy Pass</Text>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
       >
-        {/* Pass Details */}
-        <Card style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Pass Details</Text>
-          <View style={styles.passIconRow}>
-            <View style={styles.passIcon}>
-              <Ionicons
-                name="card-outline"
-                size={32}
-                color={theme.colors.primary[500]}
-              />
-            </View>
-            <View style={styles.passInfo}>
-              <Text style={styles.passName}>{templateName}</Text>
-              <Text style={styles.passDesc}>{templateDescription}</Text>
-            </View>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Total</Text>
-            <Text style={styles.priceValue}>{price.toLocaleString()} RWF</Text>
-          </View>
-        </Card>
-
-        {/* Payment Method */}
-        <Text style={styles.sectionHeader}>Payment Method</Text>
-        <View style={styles.methodsContainer}>
-          {MOCK_PAYMENT_METHODS.map((method) => {
-            const isSelected = selectedMethodId === method.id;
-            return (
-              <TouchableOpacity
-                key={method.id}
-                style={[
-                  styles.methodCard,
-                  isSelected && styles.methodCardSelected,
-                ]}
-                onPress={() => setSelectedMethodId(method.id)}
-              >
-                <View
-                  style={[styles.radio, isSelected && styles.radioSelected]}
-                >
-                  {isSelected && <View style={styles.radioInner} />}
-                </View>
-                <View style={styles.methodInfo}>
-                  <Text
-                    style={[
-                      styles.methodLabel,
-                      isSelected && styles.methodLabelSelected,
-                    ]}
-                  >
-                    {method.label}
-                  </Text>
-                  <Text style={styles.methodSubtext}>
-                    {method.type === "mobile_money"
-                      ? "Fast & Secure"
-                      : "Credit/Debit Card"}
-                  </Text>
-                </View>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Pass Details */}
+          <Card style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Pass Details</Text>
+            <View style={styles.passIconRow}>
+              <View style={styles.passIcon}>
                 <Ionicons
-                  name={
-                    method.type === "mobile_money"
-                      ? "phone-portrait-outline"
-                      : "card-outline"
-                  }
-                  size={24}
-                  color={
-                    isSelected
-                      ? theme.colors.primary[500]
-                      : theme.colors.text.tertiary
-                  }
+                  name="card-outline"
+                  size={32}
+                  color={theme.colors.primary[500]}
                 />
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+              </View>
+              <View style={styles.passInfo}>
+                <Text style={styles.passName}>{templateName}</Text>
+                <Text style={styles.passDesc}>{templateDescription}</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Total</Text>
+              <Text style={styles.priceValue}>
+                {price.toLocaleString()} RWF
+              </Text>
+            </View>
+          </Card>
 
-        <Card style={styles.paymentInputCard}>
-          <Input
-            label="Phone Number"
-            placeholder="078 XXX XXXX"
-            keyboardType="phone-pad"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            leftIcon="call-outline"
-          />
-        </Card>
-      </ScrollView>
+          {/* Payment Method */}
+          <Text style={styles.sectionHeader}>Payment Method</Text>
+          <View style={styles.methodsContainer}>
+            {MOCK_PAYMENT_METHODS.map((method) => {
+              const isSelected = selectedMethodId === method.id;
+              return (
+                <TouchableOpacity
+                  key={method.id}
+                  style={[
+                    styles.methodCard,
+                    isSelected && styles.methodCardSelected,
+                  ]}
+                  onPress={() => setSelectedMethodId(method.id)}
+                >
+                  <View
+                    style={[styles.radio, isSelected && styles.radioSelected]}
+                  >
+                    {isSelected && <View style={styles.radioInner} />}
+                  </View>
+                  <View style={styles.methodInfo}>
+                    <Text
+                      style={[
+                        styles.methodLabel,
+                        isSelected && styles.methodLabelSelected,
+                      ]}
+                    >
+                      {method.label}
+                    </Text>
+                    <Text style={styles.methodSubtext}>
+                      {method.type === "mobile_money"
+                        ? "Fast & Secure"
+                        : "Credit/Debit Card"}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={
+                      method.type === "mobile_money"
+                        ? "phone-portrait-outline"
+                        : "card-outline"
+                    }
+                    size={24}
+                    color={
+                      isSelected
+                        ? theme.colors.primary[500]
+                        : theme.colors.text.tertiary
+                    }
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Card style={styles.paymentInputCard}>
+            <Input
+              label="Phone Number"
+              placeholder="078 XXX XXXX"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              leftIcon="call-outline"
+            />
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View style={styles.footer}>
         <View style={styles.totalRow}>
@@ -193,6 +202,9 @@ export default function PassCheckoutScreen() {
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
+    keyboardView: {
+      flex: 1,
+    },
     header: {
       flexDirection: "row",
       alignItems: "center",

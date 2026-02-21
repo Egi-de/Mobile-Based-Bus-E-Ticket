@@ -1,19 +1,20 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Dimensions,
   StatusBar,
   Animated,
   Easing,
-} from 'react-native';
-import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../../hooks/useTheme';
+} from "react-native";
+import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../../hooks/useTheme";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function WelcomeScreen() {
   const { theme, isDark } = useTheme();
@@ -36,35 +37,45 @@ export default function WelcomeScreen() {
           easing: Easing.out(Easing.ease),
         }),
       ]).start(() => {
-        router.replace('/(auth)/login');
+        router.replace("/(auth)/login");
       });
-    }, 2000); 
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, []);
 
-  const gradientColors = (isDark 
-    ? [theme.colors.background.primary, theme.colors.background.secondary, theme.colors.background.tertiary]
-    : [theme.colors.primary[400], theme.colors.primary[500], theme.colors.primary[600]]) as [string, string, ...string[]];
+  const gradientColors = (
+    isDark
+      ? [
+          theme.colors.background.primary,
+          theme.colors.background.secondary,
+          theme.colors.background.tertiary,
+        ]
+      : [
+          theme.colors.primary[400],
+          theme.colors.primary[500],
+          theme.colors.primary[600],
+        ]
+  ) as [string, string, ...string[]];
 
   return (
-    <LinearGradient
-      colors={gradientColors}
-      style={styles.container}
-    >
+    <LinearGradient colors={gradientColors} style={styles.container}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <SafeAreaView style={styles.container}>
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.content, 
-            { 
-              opacity, 
-              transform: [{ scale }] 
-            }
+            styles.content,
+            {
+              opacity,
+              transform: [{ scale }],
+            },
           ]}
         >
           <View style={styles.header}>
-            <Text style={[styles.logo, { color: theme.colors.white }]}>GoPass</Text>
+            <Image
+              source={require("../../assets/images/gopass.png")}
+              style={styles.logoImage}
+            />
           </View>
         </Animated.View>
       </SafeAreaView>
@@ -76,20 +87,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  
+
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  
+
   header: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  
-  logo: {
-    fontSize: 48,
-    fontWeight: 'bold',
+
+  logoImage: {
+    width: 200,
+    height: 80,
+    resizeMode: "contain",
   },
 });
