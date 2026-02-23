@@ -104,7 +104,7 @@ function RootLayoutNav() {
   }, [isAuthenticated, segments, user]);
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background.primary }]}>
       <Slot />
       <Toast />
     </View>
