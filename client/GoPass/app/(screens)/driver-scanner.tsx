@@ -20,6 +20,7 @@ type ScanResult = {
   valid: boolean;
   ticketId: string;
   passenger?: string;
+  passengers?: string[]; // All passenger names from multi-seat bookings
   seat?: string;
   route?: string;
   date?: string;
@@ -84,14 +85,31 @@ export default function DriverScannerScreen() {
     Vibration.vibrate(100);
 
     try {
-      // The QR code value is the ticket/booking ID
-      const ticketId = data.trim();
+      // Parse QR data — supports JSON (new) or plain booking ID (legacy)
+      let ticketId = data.trim();
+      let qrPassengers: string[] = [];
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.bookingId) {
+          ticketId = parsed.bookingId;
+          qrPassengers = parsed.passengers || [];
+        }
+      } catch {
+        // Not JSON — treat as plain booking ID
+      }
+
       const ticket = await ticketsService.getTicketById(ticketId);
 
       const ticketAny = ticket as any;
       const isActive =
         ticket.status === "ACTIVE" || (ticket.status as string) === "active";
       const route = ticketAny.route;
+
+      // Gather passenger names from ticket data or QR fallback
+      const passengerNames: string[] =
+        ticketAny.passengerNames ||
+        ticketAny.booking?.passengerNames ||
+        qrPassengers;
 
       if (isActive) {
         Vibration.vibrate([0, 100, 50, 100]); // double buzz = valid
@@ -101,6 +119,7 @@ export default function DriverScannerScreen() {
           ticketId: ticket.id,
           passenger:
             ticketAny.passenger?.name || ticketAny.passengerName || "—",
+          passengers: passengerNames.length > 0 ? passengerNames : undefined,
           seat: ticketAny.seatLabel || ticket.seatNumber || "—",
           route: route ? `${route.origin} → ${route.destination}` : "—",
           date: route?.departureTime
@@ -319,6 +338,13 @@ export default function DriverScannerScreen() {
                     value={scanResult.passenger ?? "—"}
                     icon="person"
                   />
+                  {scanResult.passengers && scanResult.passengers.length > 0 && (
+                    <ResultRow
+                      label="Group"
+                      value={scanResult.passengers.map(n => n.trim()).join(', ')}
+                      icon="people"
+                    />
+                  )}
                   <ResultRow
                     label="Seat"
                     value={scanResult.seat ?? "—"}

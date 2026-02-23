@@ -18,10 +18,13 @@ export interface Ticket {
   boardingStopId: string; // ✅ NEW - where passenger boards
   dropStopId: string; // ✅ NEW - where passenger drops
   passenger: Passenger;
+  passengerNames?: string[]; // Names of all passengers (multi-seat bookings)
   status: TicketStatus;
   price: number;
   purchaseDate: string;
   qrCodeData: string;
+  seatLabel?: string; // Formatted seat labels (e.g. "A1, A2")
+  expiryDate?: string; // Travel date / expiry
   
   // Populated from relations (optional, for UI display)
   trip?: Trip;

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -36,6 +37,7 @@ export default function RouteDetailsScreen() {
   const [showPassengerModal, setShowPassengerModal] = useState(false);
   const [isForOthers, setIsForOthers] = useState<boolean | null>(null);
   const [passengerNames, setPassengerNames] = useState<string[]>([]);
+  const [cancelOldBookingId, setCancelOldBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadRouteData = async () => {
@@ -114,7 +116,7 @@ export default function RouteDetailsScreen() {
 
   // ✅ Issue 3: Navigate to booking-confirmation with passenger names + plate number
   // ✅ Issue 4: Pass plateNumber
-  const navigateToConfirmation = (names: string[]) => {
+  const navigateToConfirmation = (names: string[], cancelOldBookingId?: string) => {
     const depDate = route?.departureTime
       ? new Date(route.departureTime)
       : new Date();
@@ -132,20 +134,55 @@ export default function RouteDetailsScreen() {
         time: format(depDate, "HH:mm"),
         departureTime: route?.departureTime,
         passengerNames: names.filter((n) => n.trim()).join(","),
+        ...(cancelOldBookingId ? { cancelOldBookingId } : {}),
       },
     });
   };
 
-  // ✅ Issue 3: Show passenger modal when >1 seat selected - skip step 1
-  const handleContinue = () => {
+  // ✅ Duplicate ticket check + passenger name flow
+  const handleContinue = async () => {
     if (selectedSeats.length === 0) return;
+
+    // Check for existing active bookings on the same route
+    try {
+      const activeBookings = await BookingService.getMyBookings("ACTIVE");
+      const duplicateBooking = activeBookings.find(
+        (b) => b.routeId === (id as string)
+      );
+
+      if (duplicateBooking) {
+        // Show warning about duplicate
+        Alert.alert(
+          "Active Ticket Found",
+          `You already have an active ticket for ${route?.origin} → ${route?.destination}.\n\nIf you proceed, your previous ticket will be cancelled with no refund.`,
+          [
+            { text: "Go Back", style: "cancel" },
+            {
+              text: "Continue Anyway",
+              style: "destructive",
+              onPress: () => proceedToBooking(duplicateBooking.id),
+            },
+          ]
+        );
+        return;
+      }
+    } catch (error) {
+      // If checking fails, allow proceeding anyway
+      console.warn("Could not check for duplicate bookings:", error);
+    }
+
+    proceedToBooking();
+  };
+
+  const proceedToBooking = (oldBookingId?: string) => {
+    if (oldBookingId) setCancelOldBookingId(oldBookingId);
     if (selectedSeats.length > 1) {
-      // In Rwanda, multiple seats = different passengers, skip the "for me" question
+      // Multiple seats → collect passenger names
       setIsForOthers(true);
       setPassengerNames(new Array(selectedSeats.length).fill(""));
       setShowPassengerModal(true);
     } else {
-      navigateToConfirmation([]);
+      navigateToConfirmation([], oldBookingId || cancelOldBookingId || undefined);
     }
   };
 
@@ -300,7 +337,7 @@ export default function RouteDetailsScreen() {
                   style={[styles.modalOptionBtn, styles.modalOptionBtnAlt]}
                   onPress={() => {
                     setShowPassengerModal(false);
-                    navigateToConfirmation([]);
+                    navigateToConfirmation([], cancelOldBookingId || undefined);
                   }}
                 >
                   <Ionicons
@@ -356,7 +393,7 @@ export default function RouteDetailsScreen() {
                     style={styles.modalConfirmBtn}
                     onPress={() => {
                       setShowPassengerModal(false);
-                      navigateToConfirmation(passengerNames);
+                      navigateToConfirmation(passengerNames, cancelOldBookingId || undefined);
                     }}
                   >
                     <Text style={styles.modalConfirmBtnText}>

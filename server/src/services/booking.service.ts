@@ -11,18 +11,34 @@ export class BookingService {
     seats: string[];
     totalAmount: number;
     travelDate: Date;
+    passengerNames?: string[];
   }): Promise<Booking> {
-    // Generate QR code data (simple format for now)
-    const qrCode = `BOOKING-${Date.now()}`;
+    // Fetch route info for rich QR code data
+    const route = await prisma.route.findUnique({
+      where: { id: data.routeId },
+      select: { origin: true, destination: true, operator: true, departureTime: true },
+    });
 
-    return prisma.booking.create({
+    // Generate rich QR code data as JSON
+    const qrData = JSON.stringify({
+      bookingId: '', // Will be replaced after creation
+      route: route ? `${route.origin} → ${route.destination}` : data.routeId,
+      operator: route?.operator || '',
+      seats: data.seats,
+      passengers: data.passengerNames || [],
+      date: data.travelDate.toISOString(),
+      amount: data.totalAmount,
+    });
+
+    const booking = await prisma.booking.create({
       data: {
         userId: data.userId,
         routeId: data.routeId,
         seats: data.seats,
+        passengerNames: data.passengerNames || [],
         totalAmount: data.totalAmount,
         travelDate: data.travelDate,
-        qrCode,
+        qrCode: qrData, // Temporary, will update with actual ID
       },
       include: {
         route: true,
@@ -36,6 +52,19 @@ export class BookingService {
         },
       },
     });
+
+    // Update QR code with the actual booking ID
+    const finalQrData = JSON.stringify({
+      ...JSON.parse(qrData),
+      bookingId: booking.id,
+    });
+
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: { qrCode: finalQrData },
+    });
+
+    return { ...booking, qrCode: finalQrData };
   }
 
   /**

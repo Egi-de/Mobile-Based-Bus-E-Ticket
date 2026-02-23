@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
   },
 
   logoImage: {
-    width: 200,
-    height: 80,
+    width: 180,
+    height: 180,
     resizeMode: "contain",
   },
 });

@@ -10,7 +10,7 @@ import { useTheme } from '../../hooks/useTheme';
 export default function PaymentSuccessScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const { amount, seats, destination } = useLocalSearchParams();
+  const { amount, seats, destination, bookingId } = useLocalSearchParams();
 
   return (
     <ScreenWrapper>
@@ -34,8 +34,8 @@ export default function PaymentSuccessScreen() {
           </View>
           <View style={styles.divider} />
           <View style={styles.row}>
-            <Text style={styles.label}>Ticket ID</Text>
-            <Text style={styles.value}>TKT-{Math.floor(Math.random() * 1000000)}</Text>
+            <Text style={styles.label}>Booking ID</Text>
+            <Text style={styles.value}>{(bookingId as string)?.substring(0, 8) || '—'}...</Text>
           </View>
         </View>
 
@@ -43,8 +43,7 @@ export default function PaymentSuccessScreen() {
           <Button 
             title="View Ticket" 
             onPress={() => {
-              // Reset to tickets tab eventually
-              router.navigate('/(tabs)/tickets');
+              router.navigate(`/(screens)/ticket-details/${bookingId}`);
             }} 
             variant="primary"
             fullWidth

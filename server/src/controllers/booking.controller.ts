@@ -5,7 +5,7 @@ import { BookingStatus } from '@prisma/client';
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
-    const { routeId, seats, totalAmount, travelDate } = req.body;
+    const { routeId, seats, totalAmount, travelDate, passengerNames } = req.body;
     const userId = (req as any).user.userId; // From auth middleware
 
     if (!routeId || !seats || !totalAmount || !travelDate) {
@@ -18,6 +18,7 @@ export const createBooking = async (req: Request, res: Response) => {
       seats,
       totalAmount,
       travelDate: new Date(travelDate),
+      passengerNames: Array.isArray(passengerNames) ? passengerNames : [],
     });
 
     return sendSuccess(res, booking, 'Booking created successfully', 201);

@@ -190,7 +190,7 @@ export default function HomeScreen() {
                 <View style={styles.heroSection}>
                   <ActiveTicketCard
                     booking={activeTicket}
-                    onPress={() => router.push("/(tabs)/tickets")}
+                    onPress={() => router.push(`/(screens)/ticket-details/${activeTicket.id}`)}
                   />
                 </View>
               ) : (
@@ -250,7 +250,7 @@ export default function HomeScreen() {
                         icon="qr-code-outline"
                         title="Show QR"
                         primary // Highlighted
-                        onPress={() => router.push("/(tabs)/tickets")}
+                        onPress={() => router.push(`/(screens)/ticket-details/${activeTicket.id}`)}
                       />
                     </View>
                   ) : (

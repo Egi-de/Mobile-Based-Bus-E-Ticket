@@ -37,6 +37,7 @@ export default function BookingConfirmationScreen() {
     departureTime,
     plateNumber,
     passengerNames,
+    cancelOldBookingId,
   } = useLocalSearchParams();
   const [selectedMethodId, setSelectedMethodId] = useState<string>(
     MOCK_PAYMENT_METHODS[0].id,
@@ -61,12 +62,27 @@ export default function BookingConfirmationScreen() {
 
     setIsProcessing(true);
     try {
-      // 1. Create Booking in Backend first
+      // 0. Cancel old duplicate booking if requested
+      if (cancelOldBookingId) {
+        try {
+          await BookingService.cancelBooking(cancelOldBookingId as string);
+        } catch (cancelError) {
+          console.warn('Failed to cancel old booking:', cancelError);
+          // Continue with new booking even if cancel fails
+        }
+      }
+
+      // 1. Create Booking in Backend
+      const passengerNamesList = passengerNames
+        ? (passengerNames as string).split(',').filter((n: string) => n.trim())
+        : [];
+
       const booking = await BookingService.createBooking({
         routeId: routeId as string,
         seats: seatList,
         totalAmount: amount,
-        travelDate: departureTime as string, // ISO string needed
+        travelDate: departureTime as string,
+        passengerNames: passengerNamesList,
       });
 
       // 2. Process Payment
@@ -92,6 +108,7 @@ export default function BookingConfirmationScreen() {
           seats: seats,
           destination: destination,
           transactionId: paymentResult.transactionId,
+          bookingId: booking.id,
         },
       });
     } catch (error: any) {

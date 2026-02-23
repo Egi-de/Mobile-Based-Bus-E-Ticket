@@ -14,10 +14,15 @@ export const TicketService = {
         return null;
       }
 
-      // Transform booking to ticket format
-      const ticket: Ticket = {
+      // Transform booking to ticket format (mixed format for backward compat)
+      const ticket = {
         id: booking.id,
         bookingId: booking.id,
+        tripId: '',
+        userId: booking.userId || '',
+        seatNumber: booking.seats.join(', '),
+        boardingStopId: '',
+        dropStopId: '',
         route: booking.route,
         seatLabel: booking.seats.join(', '),
         price: booking.totalAmount,
@@ -26,11 +31,12 @@ export const TicketService = {
           email: booking.user?.email || '',
           phone: booking.user?.phone || '',
         },
+        passengerNames: booking.passengerNames || [],
         status: booking.status.toLowerCase() as any,
         purchaseDate: booking.bookingDate,
-        qrCodeData: booking.qrCode || '',
+        qrCodeData: booking.qrCode || booking.id,
         expiryDate: booking.travelDate,
-      };
+      } as Ticket;
 
       return ticket;
     } catch (error) {

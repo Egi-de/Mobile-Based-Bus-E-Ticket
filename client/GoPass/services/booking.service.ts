@@ -5,6 +5,7 @@ export interface CreateBookingDto {
   seats: string[];
   totalAmount: number;
   travelDate: string; // ISO string
+  passengerNames?: string[];
 }
 
 export interface Booking {
@@ -12,6 +13,7 @@ export interface Booking {
   userId: string;
   routeId: string;
   seats: string[];
+  passengerNames?: string[];
   totalAmount: number;
   status: 'ACTIVE' | 'USED' | 'CANCELLED';
   qrCode?: string;
@@ -28,6 +30,14 @@ export interface Booking {
     seatsAvailable: number;
     totalSeats: number;
     amenities: string[];
+    imageUrl?: string;
+    plateNumber?: string;
+  };
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
   };
 }
 
