@@ -96,6 +96,15 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="reports"
+          options={{
+            title: 'Reports',
+            tabBarIcon: ({ color, focused }) => (
+              <AnimatedTabIcon name="stats-chart" color={color} focused={focused} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="profile"
           options={{
             href: null,

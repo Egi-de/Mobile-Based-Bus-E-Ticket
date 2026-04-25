@@ -11,6 +11,7 @@ import notificationRoutes from './notification.routes';
 import tripRoutes from './trip.routes';
 import stopRoutes from './stop.routes';
 import ticketRoutes from './ticket.routes';
+import analyticsRoutes from './analytics.routes';
 import { StorageController } from '../controllers/storage.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { asyncHandler } from '../utils/response';
@@ -29,6 +30,7 @@ router.use('/bookings', bookingRoutes);
 router.use('/passes', passRoutes);
 router.use('/buses', busRoutes);
 router.use('/stats', statsRoutes);
+router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);
 
 // Storage routes

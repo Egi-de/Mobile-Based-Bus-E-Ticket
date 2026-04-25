@@ -9,12 +9,8 @@ import { useTheme } from "../hooks/useTheme";
 import { fcmService } from "../services/notifications/fcm.service";
 import { Toast } from "../components/ui/Toast";
 import * as Notifications from "expo-notifications";
-import { LogBox } from "react-native";
 
 export { ErrorBoundary } from "expo-router";
-
-// Disable all LogBox notifications (dev error toasts)
-LogBox.ignoreAllLogs(true);
 
 SplashScreen.preventAutoHideAsync();
 
