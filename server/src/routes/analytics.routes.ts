@@ -12,5 +12,6 @@ router.get('/scans', AnalyticsController.getScans);
 router.get('/demographics', AnalyticsController.getDemographics);
 router.get('/capacity', AnalyticsController.getCapacity);
 router.get('/support', AnalyticsController.getSupportStats);
+router.get('/summary', AnalyticsController.getSummary);
 
 export default router;
