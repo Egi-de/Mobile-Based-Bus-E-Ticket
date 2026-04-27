@@ -8,6 +8,7 @@ import {
   Switch,
   Image,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -101,18 +102,28 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: async () => {
-          await logout();
-          router.replace("/(auth)/welcome");
+    if (Platform.OS === "web") {
+      // Alert.alert is a no-op on web — use browser confirm instead
+      const confirmed = window.confirm("Are you sure you want to logout?");
+      if (confirmed) {
+        await logout();
+        router.replace("/(auth)/welcome");
+      }
+    } else {
+      Alert.alert("Logout", "Are you sure you want to logout?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            await logout();
+            router.replace("/(auth)/welcome");
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
+
 
   const onRefresh = async () => {
     // Simulate data refresh

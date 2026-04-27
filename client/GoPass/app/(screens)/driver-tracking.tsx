@@ -9,6 +9,7 @@ import {
   Animated,
   Dimensions,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker,Polyline, PROVIDER_GOOGLE } from "../../components/MapViewWeb";
@@ -270,38 +271,52 @@ export default function DriverTrackingScreen() {
   };
 
   const handleStopTracking = async () => {
-    Alert.alert(
-      "Stop Tracking",
-      `Route summary:\n• Distance: ${formatKm(distanceTraveled)}\n• Duration: ${formatElapsed(elapsedSeconds)}\n\nConfirm stop?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Stop",
-          style: "destructive",
-          onPress: async () => {
-            await stopTracking();
+    if (Platform.OS === "web") {
+      const msg = `Route summary:\n• Distance: ${formatKm(distanceTraveled)}\n• Duration: ${formatElapsed(elapsedSeconds)}\n\nConfirm stop?`;
+      if (window.confirm(msg)) {
+        await stopTracking();
+      }
+    } else {
+      Alert.alert(
+        "Stop Tracking",
+        `Route summary:\n• Distance: ${formatKm(distanceTraveled)}\n• Duration: ${formatElapsed(elapsedSeconds)}\n\nConfirm stop?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Stop",
+            style: "destructive",
+            onPress: async () => {
+              await stopTracking();
+            },
           },
-        },
-      ],
-    );
+        ],
+      );
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (isTracking) {
-      Alert.alert(
-        "Tracking Active",
-        "Please stop tracking before logging out.",
-      );
+      if (Platform.OS === "web") {
+        window.alert("Please stop tracking before logging out.");
+      } else {
+        Alert.alert("Tracking Active", "Please stop tracking before logging out.");
+      }
       return;
     }
-    Alert.alert("Logout", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: async () => await logout(),
-      },
-    ]);
+    if (Platform.OS === "web") {
+      if (window.confirm("Are you sure you want to logout?")) {
+        await logout();
+      }
+    } else {
+      Alert.alert("Logout", "Are you sure?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => await logout(),
+        },
+      ]);
+    }
   };
 
   // ── Route total distance estimate ──────────────────────────────────────────
