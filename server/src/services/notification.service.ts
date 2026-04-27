@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { firebaseAdminService } from './firebase-admin.service';
+import { geofencingService } from './geofencing.service';
 
 const prisma = new PrismaClient();
 
@@ -160,8 +161,6 @@ class NotificationService {
         return;
       }
 
-      // Import geofencing service dynamically
-      const { geofencingService } = await import('./geofencing.service');
 
       // Check each booking
       for (const booking of bookings) {
