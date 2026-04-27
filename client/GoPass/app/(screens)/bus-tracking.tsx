@@ -10,7 +10,7 @@ import {
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "../../components/MapViewWeb";
 import { router, useGlobalSearchParams } from "expo-router";
 import { ScreenWrapper } from "../../components/ui/ScreenWrapper";
 import { Card } from "../../components/ui/Card";

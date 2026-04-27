@@ -11,7 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker,Polyline, PROVIDER_GOOGLE } from "../../components/MapViewWeb";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import { ScreenWrapper } from "../../components/ui/ScreenWrapper";
